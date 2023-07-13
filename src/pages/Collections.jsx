@@ -10,20 +10,20 @@ function Homepage() {
   const pokeCollect = useContext(CollectContext)
 
   return (
-    <div className="container mx-auto pb-10">
+    <div className="container mx-auto pb-10 px-4 tablet:px-2">
       <Header route="collect" />
-      <section className="p-10 space-y-5">
-        <div className="flex items-center justify-center gap-3">
+      <section className="px-2 py-6 tablet:py-10 space-y-5">
+        <div className="flex flex-col phone-lg:flex-row items-center justify-center gap-1 phone-lg:gap-3">
           <img
-            className="w-12 cursor-pointer active:rotate-180 ease-in duration-100"
+            className="w-10 teblet:w-12 cursor-pointer active:rotate-180 ease-in duration-100"
             src={Ball}
             loading="lazy"
           />
-          <p className="text-[25px] text-shadow font-bold">Saved Pokemon</p>
+          <p className="text-[19px] tablet:text-[25px] text-shadow font-bold">Saved Pokemon</p>
         </div>
       </section>
       {pokeCollect.collect.length > 1 ? (
-        <main className="grid grid-cols-5 gap-10">
+        <main className="grid grid-cols-2 tablet:grid-cols-3 desktop:grid-cols-4 monitor:grid-cols-5 gap-5 tablet:gap-10">
         {pokeCollect.collect?.map((data,index) => {
           if (index % 2 === 0) {
             return <CardMain key={data.id} data={data} />;
