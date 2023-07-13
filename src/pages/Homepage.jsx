@@ -4,6 +4,7 @@ import CardMain from "../components/CardMain";
 import Button from "../components/Button";
 import axios from "axios";
 import { useEffect, useState } from "react";
+import Swal from "sweetalert2";
 
 function Homepage() {
   const [datas, setDatas] = useState([]);
@@ -19,7 +20,7 @@ function Homepage() {
   const getData = () => {
     setLoading(true);
     axios
-      .get("https://pokeapi.co/api/v2/pokemon?limit=50")
+      .get("https://pokeapi.co/api/v2/pokemon?limit=100")
       .then((response) => {
         response.data.results.map((detailMonster) => {
           axios.get(detailMonster.url).then((result) => {
@@ -37,12 +38,11 @@ function Homepage() {
         });
       })
       .catch((error) => {
-        console.log(error.message);
+        Swal.fire(error.message, "", "error");
       });
   };
 
   const loadMore = () => {
-    setLoading(true);
     axios
       .get(`https://pokeapi.co/api/v2/pokemon/?offset=${datas.length}&limit=50`)
       .then((response) => {
@@ -56,69 +56,63 @@ function Homepage() {
               image: result.data.sprites.other.dream_world.front_default,
               types: result.data.types,
             };
-            setLoading(false);
             return setDatas((datas) => [...datas, filter]);
           });
         });
       })
       .catch((error) => {
-        console.log(error.message);
-      });
-  };
-
-  const getTypes = () => {
-    setLoading(true);
-    axios
-      .get("https://pokeapi.co/api/v2/type")
-      .then((response) => {
-        response.data.results.map((detailMonster) => {
-          axios.get(detailMonster.url).then((result) => {
-            setLoading(false);
-            return setTypes((datas) => [
-              ...datas,
-              { id: result.data.id, name: result.data.name },
-            ]);
-          });
-        });
-      })
-      .catch((error) => {
-        console.log(error.message);
+        Swal.fire(error.message, "", "error");
       });
   };
 
   const searchAction = (e) => {
-    if (search === "") {
-      getData();
-    }
     e.preventDefault();
-    setLoading(true);
+    if (search === "") {
+      return getData();
+    } else {
+      axios
+        .get(`https://pokeapi.co/api/v2/pokemon/${search.toLowerCase()}`)
+        .then((response) => {
+          console.log(response);
+          const filter = {
+            id: response.data.id,
+            name: response.data.name,
+            height: response.data.height,
+            weight: response.data.weight,
+            image: response.data.sprites.other.dream_world.front_default,
+            types: response.data.types,
+          };
+          return setDatas(() => [filter]);
+        })
+        .catch(() => {
+          // Swal.fire(error.message, "", "error");
+          return setDatas(() => []);
+        });
+    }
+  };
+
+  const getTypes = () => {
     axios
-      .get(`https://pokeapi.co/api/v2/pokemon/${search}`)
+      .get("https://pokeapi.co/api/v2/type")
       .then((response) => {
-        console.log(response);
-        const filter = {
-          id: response.data.id,
-          name: response.data.name,
-          height: response.data.height,
-          weight: response.data.weight,
-          image: response.data.sprites.other.dream_world.front_default,
-          types: response.data.types,
-        };
-        setLoading(false);
-        return setDatas(() => [filter]);
+        response.data.results.map((type) => {
+          axios.get(type.url).then((result) => {
+            return setTypes((prevData) => {
+              return [
+                ...prevData,
+                { id: result.data.id, name: result.data.name },
+              ];
+            });
+          });
+        });
       })
       .catch((error) => {
-        console.log(error.message);
-        return setDatas(() => []);
+        Swal.fire(error.message, "", "error");
       });
   };
 
   const filterType = (selected, callback) => {
-    if (loading) {
-      filterType(selected, callback);
-    } else {
-      callback(selected);
-    }
+    callback(selected);
   };
 
   const actionFilterType = async (selected) => {
@@ -136,6 +130,7 @@ function Homepage() {
       return setDatas(() => resFilter);
     }
   };
+
   return (
     <div className="container mx-auto pb-10 px-4 tablet:px-2">
       <Header />
@@ -143,9 +138,9 @@ function Homepage() {
         <div className="relative tablet:w-[80%] laptop:w-[70%] desktop:w-[30%] mx-auto">
           <form onSubmit={searchAction}>
             <input
-              onClick={(e) => setSearch(e.target.value)}
+              onChange={(e) => setSearch(e.target.value)}
               className="bg-white py-2 pl-5 pr-12 rounded-md text-black outline-none placeholder-black mx-auto shadow-md w-full"
-              placeholder="Search Pokemon"
+              placeholder="Search Pokemon (enter)"
             />
           </form>
           <img
@@ -157,7 +152,7 @@ function Homepage() {
         <div className="relative tablet:w-[80%] laptop:w-[70%] desktop:w-[30%] mx-auto">
           <select
             onChange={(e) => {
-              e.preventDefault()
+              e.preventDefault();
               let { value } = e.target;
               setDatas(() => []);
               getData();
@@ -171,48 +166,59 @@ function Homepage() {
               Select Type
             </option>
             {types?.map((type) => (
-              <option
-                label={type.name}
-                key={type.id}
-                value={type.name}
-              >
+              <option label={type.name} key={`${type.id}`} value={type.name}>
                 {type.name}
               </option>
             ))}
           </select>
         </div>
       </section>
-      <main className="grid grid-cols-2 tablet:grid-cols-3 desktop:grid-cols-4 monitor:grid-cols-5 gap-5 tablet:gap-10">
-        {datas?.map((data, index) => {
-          if (index % 2 === 0) {
-            return <CardMain key={data.id} data={data} />;
-          } else {
-            return (
-              <CardMain
-                key={data.id}
-                data={data}
-                className={"bg-green-bright"}
-              />
-            );
-          }
-        })}
-      </main>
-      {datas.length === 0 && (
+      {loading ? (
         <div className="text-center mt-14">
           <button className="bg-green-bright text-black text-lg w-fit py-3 px-8 rounded-md mx-auto">
-            NO DATA
-            <p>The search must be complete and correct !</p>
+            Loadinng...
           </button>
         </div>
-      )}
-      {datas.length <= 300 && datas.length !== 0 && (
-        <div className="text-center mt-14">
-          <Button
-            onClick={() => loadMore()}
-            text={"Load More"}
-            className={"text-white bg-red-bright "}
-          />
-        </div>
+      ) : (
+        <>
+          <main className="grid grid-cols-2 tablet:grid-cols-3 desktop:grid-cols-4 monitor:grid-cols-5 gap-5 tablet:gap-10">
+            {datas?.map((data, index) => {
+              if (index % 2 === 0) {
+                return (
+                  <CardMain
+                    key={`${data.id}${index}${Math.random()}`}
+                    data={data}
+                  />
+                );
+              } else {
+                return (
+                  <CardMain
+                    key={`${data.id}${index}${Math.random()}`}
+                    data={data}
+                    className={"bg-green-bright"}
+                  />
+                );
+              }
+            })}
+          </main>
+          {datas.length === 0 && (
+            <div className="text-center mt-14">
+              <button className="bg-green-bright text-black text-lg w-fit py-3 px-8 rounded-md mx-auto">
+                NO DATA
+                <p>The search must be complete and correct !</p>
+              </button>
+            </div>
+          )}
+          {datas.length <= 300 && datas.length !== 0 && (
+            <div className="text-center mt-14">
+              <Button
+                onClick={() => loadMore()}
+                text={"Load More"}
+                className={"text-white bg-red-bright "}
+              />
+            </div>
+          )}
+        </>
       )}
     </div>
   );

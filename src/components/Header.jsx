@@ -6,7 +6,14 @@ function Header({ route = "" }) {
   const navigate = useNavigate();
   return (
     <header className="w-full flex justify-center py-5 relative">
-      <img className="w-[50%] tablet:w-fit cursor-pointer" onClick={()=> navigate("/")} src={Logo} loading="eager" />
+      <img
+        className="w-[50%] tablet:w-fit cursor-pointer"
+        onClick={() => {
+          navigate("/");
+        }}
+        src={Logo}
+        loading="eager"
+      />
       <img
         onClick={() => {
           if (route !== "collect") {

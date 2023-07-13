@@ -19,6 +19,7 @@ function Details() {
   const responsiveButton = pokeCollect.collect.findIndex(
     (n) => n.id === state.id
   );
+  console.log(pokeCollect)
 
   return (
     <div className="container mx-auto pb-10 px-4 tablet:px-2">
@@ -70,9 +71,10 @@ function Details() {
           />
           {responsiveButton < 0 ? (
             <Button
-              onClick={async () => {
+              onClick={() => {
                 const newData = { ...state, aliasName };
-                await pokeCollect.setCollect([newData, ...pokeCollect.collect]);
+                pokeCollect.addData(newData)
+                console.log(pokeCollect)
                 Swal.fire("Pokémon saved to Poké Ball", "", "success");
                 setTimeout(() => {
                   return navigate("/collect");
@@ -93,11 +95,11 @@ function Details() {
                   cancelButtonColor: "#d33",
                   confirmButtonText: "Yes, delete it!",
                 }).then((result) => {
-                  const index = pokeCollect.collect.findIndex(
-                    (n) => n.id === state.id
-                  );
-                  pokeCollect.collect.splice(index, 1);
                   if (result.isConfirmed) {
+                    const index = pokeCollect.collect.findIndex(
+                      (n) => n.id === state.id
+                    );
+                    pokeCollect.collect.splice(index, 1);
                     Swal.fire(
                       "Deleted!",
                       "Your file has been deleted.",
